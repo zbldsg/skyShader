@@ -14,10 +14,10 @@ export function createRenderer(dom) {
   renderer.setClearAlpha(0.01); // 打开渲染器透明
   renderer.setSize(w, h); // 设置宽和高
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.sortObjects = true;
-  renderer.shadowMap.enabled = true; // open the shadow
-  renderer.setClearColor(0x0a1639);
-  renderer.autoClear = false;
+  // renderer.sortObjects = true;
+  // renderer.shadowMap.enabled = true; // open the shadow
+  // renderer.setClearColor(0x0a1639);
+  // renderer.autoClear = false;
   //   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // renderer.toneMapping = THREE.ReinhardToneMapping
   dom.appendChild(renderer.domElement); // 添加到dom

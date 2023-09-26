@@ -58,8 +58,12 @@ function init() {
 }
 function animate() {
   render();
-  requestAnimationFrame((msTime) => {
-    mesh.material.uniforms.u_time.value += 0.005;
+
+  requestAnimationFrame((time) => {
+    cube.rotation.x += 0.02;
+    cube.rotation.y += 0.03;
+
+    mesh.material.uniforms.u_time.value += 0.03;
     animate();
   });
 }
@@ -143,11 +147,6 @@ function initShader() {
                 float longitude = atan(fragPosition.z, fragPosition.x);
                 float latitude = acos(fragPosition.y / length(fragPosition));
 
-                // 处理接缝
-                if (longitude < 0.0) {
-                    longitude += 2.0 * PI;
-                }
-
                 // 映射到纹理坐标
                 vec2 texCoord;
                 texCoord.x = longitude / (2.0 * PI); // 经度映射到 U 轴
@@ -177,7 +176,7 @@ function initShader() {
     side: THREE.BackSide,
   });
 
-  mesh = new THREE.Mesh(new THREE.SphereGeometry(1000, 128, 128), material);
+  mesh = new THREE.Mesh(new THREE.SphereGeometry(4000, 128, 128), material);
   // mesh.rotation.x = Math.PI;
   current.scene.add(mesh);
 }
@@ -186,26 +185,29 @@ function initReflact() {
   cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256);
   cubeRenderTarget.texture.type = THREE.HalfFloatType;
 
-  cubeCamera = new THREE.CubeCamera(1, 1000, cubeRenderTarget);
+  cubeCamera = new THREE.CubeCamera(1, 4000, cubeRenderTarget);
   current.scene.add(cubeCamera);
 
-  let material1 = new THREE.MeshBasicMaterial({
+  let material1 = new THREE.MeshStandardMaterial({
     envMap: cubeRenderTarget.texture,
-    roughness: 0,
+    roughness: 0.05,
     metalness: 1,
   });
 
-  let sphere = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 8), material1);
+  let sphere = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 64), material1);
   current.scene.add(sphere);
 
   const material2 = new THREE.MeshStandardMaterial({
     roughness: 0.1,
     metalness: 0,
+    color: new THREE.Color(0, 100, 0),
   });
   cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material2);
+  cube.position.x = 4;
   current.scene.add(cube);
 
-  // renderers.renderer.toneMappingExposure = 1;
+  renderers.renderer.outputColorSpace = THREE.sRGBColorSpace;
+  // renderers.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 }
 
 function initUnity() {
