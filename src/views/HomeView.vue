@@ -89,7 +89,8 @@ function initShader() {
 
             vec3 uvToRayDir( vec2 uv ) {
               float fRayPhi = PI * ( 3.0 / 2.0 - 2.0 * uv.x );
-              float fRayTheta = PI * ( uv.y );
+              //这里uv.y需要 + 1, 来反转云彩, 要不然云彩在下面
+              float fRayTheta = PI * ( uv.y + 1.);
               return vec3(
                   sin( fRayTheta ) * cos( fRayPhi ),
                   -cos( fRayTheta ),
@@ -124,9 +125,9 @@ function initShader() {
                 col = vec3(0.2,0.5,0.85)*1.1 - rd.y*rd.y*0.5;
                 col = mix( col, 0.85*vec3(0.7,0.75,0.85), pow( 1.0-max(rd.y,0.0), 4.0 ) );
                 // sun
-                col += 0.25*vec3(1.0,0.7,0.4)*pow( sundot,5.0 );
-                col += 0.25*vec3(1.0,0.8,0.6)*pow( sundot,64.0 );
-                col += 0.4*vec3(1.0,0.8,0.6)*pow( sundot,512.0 );
+                col += 0.45*vec3(1.0,0.7,0.4)*pow( sundot,5.0 );
+                col += 0.45*vec3(1.0,0.8,0.6)*pow( sundot,64.0 );
+                col += 0.6*vec3(1.0,0.8,0.6)*pow( sundot,512.0 );
                 // clouds
                 col = Cloud(col,ro,rd,vec3(1.0,0.95,1.0),1.);
                 // .
@@ -156,114 +157,6 @@ function initShader() {
                 col = RayMarchCloud( ro, rd);
                 gl_FragColor = vec4(col,1.0);
             }`;
-  // const fragmentShader = `
-  //           uniform float u_time;
-  //           varying vec2 vUv;
-  //           varying vec3 fragPosition;
-  //           uniform sampler2D noise;
-
-  //           vec3 lightDir = normalize( vec3(0.5,0.6,0.) );
-  //           const mat2 m2 = mat2( 0.60, -0.80, 0.80, 0.60 );
-
-  //           #define PI 3.14159265359
-
-  //           vec3 spherePosFromUV(vec2 uv) {
-  //               float phi = uv.x * 2.0 * PI;
-  //               float theta = uv.y * PI;
-  //               return vec3(
-  //                   sin(theta) * cos(phi),
-  //                   cos(theta),
-  //                   sin(theta) * sin(phi)
-  //               );
-  //           }
-
-  //           vec3 uvToRayDir( vec2 uv ) {
-  //             float fRayPhi = PI * ( 3.0 / 2.0 - 2.0 * uv.x );
-  //             float fRayTheta = PI * ( uv.y );
-  //             return vec3(
-  //                 sin( fRayTheta ) * cos( fRayPhi ),
-  //                 -cos( fRayTheta ),
-  //                 sin( fRayTheta ) * sin( fRayPhi )
-  //             );
-  //           }
-
-  //           vec3 Cloud(vec3 bgCol,vec3 ro,vec3 rd,vec3 cloudCol,float spd) {
-  //               vec3 col = bgCol;
-  //               float t = u_time * 0.15* spd;
-  //               vec2 sc = ro.xz + rd.xz*((3.)*40000.0-ro.y)/rd.y;
-  //               vec2 p = 0.00002*sc;
-  //               float f = 0.0;
-  //               float s = 0.5;
-  //               float sum =0.;
-  //               for(int i=0;i<5;i++){
-  //                 p += t;t *=1.5;
-  //                 f += s*texture2D(noise, p/256.0, 0.0).x; p = m2*p*2.02;
-  //                 sum+= s;s*=0.6;
-  //               }
-  //               float val = f/sum;
-  //               col = mix( col, cloudCol, 0.5*smoothstep(0.5,0.8,val) );
-  //               return col;
-  //           }
-
-  //           vec3 RayMarchCloud(vec3 ro,vec3 rd){
-  //               vec3 col = vec3(0.0,0.0,0.0);
-  //               float sundot = clamp(dot(rd,lightDir),0.0,1.0);
-
-  //                // sky
-  //               col = vec3(0.2,0.5,0.85)*1.1 - rd.y*rd.y*0.5;
-  //               col = mix( col, 0.85*vec3(0.7,0.75,0.85), pow( 1.0-max(rd.y,0.0), 4.0 ) );
-  //               // sun
-  //               // col += 0.25*vec3(1.0,0.7,0.4)*pow( sundot,5.0 );
-  //               // col += 0.25*vec3(1.0,0.8,0.6)*pow( sundot,64.0 );
-  //               // col += 0.4*vec3(1.0,0.8,0.6)*pow( sundot,512.0 );
-  //               // clouds
-  //               col = Cloud(col,ro,rd,vec3(1.0,0.95,1.0),1.);
-  //               // .
-  //               col = mix( col, 0.68*vec3(0.4,0.65,1.0), pow( 1.0-max(rd.y,0.0), 16.0 ) );
-  //               return col;
-  //           }
-
-  //           vec3 InitCam(vec2 uv){
-  //               vec2 mo = uv;
-  //               mo.x *= 3.14159;
-  //               // mo.y += 0.1;
-  //               mo.x += smoothstep(0.6,1.,0.5+0.5)-1.5;
-
-  //               vec3 eyedir = normalize(vec3(cos(mo.x),mo.y*2.-0.2+sin(1.57)*0.1,sin(mo.x)));
-  //               vec3 rightdir = normalize(vec3(cos(mo.x+1.5708),0.,sin(mo.x+1.5708)));
-  //               vec3 updir = normalize(cross(rightdir,eyedir));
-  //               vec3 rd=normalize((uv.x*rightdir+uv.y*updir)*1.+eyedir);
-  //               return rd;
-  //           }
-
-  //           void main() {
-  //               vec3 col  = vec3 (0.,0.,0.);
-  //               vec3 ro = vec3 (0.,0.,0.);
-
-  //               vec2 uv = (vUv - 0.5) * 2.0;
-  //               // uv = fract(uv);
-  //               // uv.x *= 0.99;
-
-  //               float longitude = atan(fragPosition.z, fragPosition.x);
-  //               float latitude = acos(fragPosition.y / length(fragPosition));
-
-  //               // 处理接缝
-  //               if (longitude < 0.0) {
-  //                   longitude += 2.0 * PI;
-  //               }
-
-  //               // 映射到纹理坐标
-  //               vec2 texCoord;
-  //               texCoord.x = longitude / (2.0 * PI); // 经度映射到 U 轴
-  //               texCoord.y = latitude / PI;          // 纬度映射到 V 轴
-
-  //               // vec3 rd = InitCam(uv);
-  //               vec3 rd = uvToRayDir(texCoord);
-  //               col = RayMarchCloud( ro, rd);
-  //               // gl_FragColor = vec4(texCoord.x,0.0,0.0,1.0);
-  //               gl_FragColor = vec4(col,1.0);
-  //               // gl_FragColor = vec4(rd,1.0);
-  //           }`;
   const loader = new THREE.TextureLoader();
   let texture = loader.load("./textures/noise.png");
   texture.wrapS = THREE.RepeatWrapping;
@@ -284,7 +177,7 @@ function initShader() {
     side: THREE.BackSide,
   });
 
-  mesh = new THREE.Mesh(new THREE.SphereGeometry(200, 128, 128), material);
+  mesh = new THREE.Mesh(new THREE.SphereGeometry(1000, 128, 128), material);
   // mesh.rotation.x = Math.PI;
   current.scene.add(mesh);
 }
